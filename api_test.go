@@ -17,6 +17,8 @@ func TestRewriteFile(t *testing.T) {
 
 	source := `package P
 
+import "log"
+
 func e1() error {
 	return nil
 }
@@ -38,9 +40,6 @@ func c() {
 }
 	`
 
-	// conf.TypeChecker.Error = func(err error) {
-	// 	t.Log(err)
-	// }
 	conf.AllowErrors = true
 
 	f, err := conf.ParseFile("p.go", source)
@@ -55,7 +54,6 @@ func c() {
 	}
 
 	rewriteFile(conf.Fset, f, prog.Package("p").Info)
-	ast.Print(conf.Fset, f)
 	printer.Fprint(os.Stderr, conf.Fset, f)
 
 	_ = err

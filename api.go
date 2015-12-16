@@ -85,7 +85,6 @@ func rewriteFile(fset *token.FileSet, f *ast.File, info types.Info) {
 						}
 					}
 					if funcDecl != nil {
-						log.Println(fset.Position(assign.Pos()))
 						errAssigns = append(errAssigns, errorAssign{
 							outerFunc: funcDecl,
 							stmt:      assign,
@@ -104,13 +103,9 @@ func rewriteFile(fset *token.FileSet, f *ast.File, info types.Info) {
 		assignLine := fset.Position(assign.stmt.Pos()).Line
 		next := astmanip.NextSibling(f, assign.stmt)
 		if next == nil || fset.Position(next.Pos()).Line-assignLine > 1 {
-			log.Println(assign.outerFunc.Name, info.Scopes[assign.outerFunc.Type])
-			log.Println(info.ObjectOf(assign.outerFunc.Name))
-
 			handle := makeErrorHandleStatement(assign, info)
 			ifStmt := makeErrorCatchStatement(assign.ident, handle)
 
-			log.Printf("%#v", ifStmt)
 			assign.outerFunc.Body.List = astmanip.InsertStmtAfter(assign.outerFunc.Body.List, ifStmt, assign.stmt)
 			// assign.outerFunc.Type.Results.List[0].Type
 			// if func has error in result type, return
@@ -141,14 +136,23 @@ func makeErrorHandleStatement(assign errorAssign, info types.Info) ast.Stmt {
 					returnValues[i] = zv
 				}
 			}
-			log.Printf("%#v", returnValues)
 			return &ast.ReturnStmt{Results: returnValues}
 		}
 	}
 
-	expr, err := parser.ParseExpr(panicCode)
+	code := panicCode
+
+	log.Println(info.Scopes[assign.outerFunc.Type])
+	log.Println(info.Scopes[assign.outerFunc.Type].Parent())
+
+	_, obj := info.Scopes[assign.outerFunc.Type].LookupParent("log", 0)
+	if logPkg, ok := obj.(*types.PkgName); ok && logPkg.Imported().Path() == "log" {
+		code = logFatalCode
+	}
+
+	expr, err := parser.ParseExpr(code)
 	if err != nil {
-		panic(fmt.Sprintf("must not fail: %s while parsing %q", err, panicCode))
+		panic(fmt.Sprintf("must not fail: %s while parsing %q", err, code))
 	}
 
 	return &ast.ExprStmt{X: expr}
