@@ -75,10 +75,10 @@ func RewriteFile(fset *token.FileSet, f *ast.File, info types.Info) {
 		assignLine := fset.Position(assign.stmt.Pos()).Line
 		next := astmanip.NextSibling(f, assign.stmt)
 		if next == nil || fset.Position(next.Pos()).Line-assignLine > 1 {
-			handle := makeErrorHandleStatement(assign, info)
-			ifStmt := makeErrorCatchStatement(assign.ident, handle)
-
-			assign.outerFunc.Body.List = astmanip.InsertStmtAfter(assign.outerFunc.Body.List, ifStmt, assign.stmt)
+			catch := makeErrorCatchStatement(
+				assign.ident, makeErrorHandleStatement(assign, info),
+			)
+			astmanip.InsertStmtAfter(assign.outerFunc.Body, catch, assign.stmt)
 		}
 	}
 }

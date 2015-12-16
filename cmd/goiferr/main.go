@@ -38,7 +38,7 @@ func main() {
 	for _, pkg := range prog.InitialPackages() {
 		for _, f := range pkg.Files {
 			filename := prog.Fset.File(f.Pos()).Name()
-			fmt.Printf("=== %s\n", filename)
+			fmt.Fprintf(os.Stderr, "=== %s\n", filename)
 			iferr.RewriteFile(prog.Fset, f, pkg.Info)
 			if *write {
 				fh, err := os.Create(filename)
