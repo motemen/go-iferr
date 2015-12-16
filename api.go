@@ -19,6 +19,7 @@ import (
 var (
 	panicCode    = "panic(err.Error())"
 	logFatalCode = "log.Fatal(err)"
+	tFatalCode   = "t.Fatal(err)"
 )
 
 func doit() error {
@@ -41,7 +42,7 @@ func doit() error {
 	pkgs := prog.InitialPackages()
 	for _, pkg := range pkgs {
 		for _, file := range pkg.Files {
-			rewriteFile(prog.Fset, file, pkg.Info)
+			RewriteFile(prog.Fset, file, pkg.Info)
 		}
 	}
 
@@ -62,7 +63,7 @@ type errorAssign struct {
 	ident     *ast.Ident
 }
 
-func rewriteFile(fset *token.FileSet, f *ast.File, info types.Info) {
+func RewriteFile(fset *token.FileSet, f *ast.File, info types.Info) {
 	errAssigns := []errorAssign{}
 
 	ast.Inspect(f, func(node ast.Node) bool {
@@ -142,13 +143,11 @@ func makeErrorHandleStatement(assign errorAssign, info types.Info) ast.Stmt {
 
 	code := panicCode
 
-	log.Println(info.Scopes[assign.outerFunc.Type])
-	log.Println(info.Scopes[assign.outerFunc.Type].Parent())
-
 	_, obj := info.Scopes[assign.outerFunc.Type].LookupParent("log", 0)
 	if logPkg, ok := obj.(*types.PkgName); ok && logPkg.Imported().Path() == "log" {
 		code = logFatalCode
 	}
+	// TODO: t.Fatal(err)
 
 	expr, err := parser.ParseExpr(code)
 	if err != nil {
