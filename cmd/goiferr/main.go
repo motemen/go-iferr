@@ -1,29 +1,52 @@
 package main
 
 import (
-	"go/printer"
+	"flag"
+	"fmt"
 	"log"
 	"os"
 
+	"go/format"
+	"go/printer"
 	"golang.org/x/tools/go/loader"
 
 	"github.com/motemen/goiferr"
 )
 
 func main() {
+	write := flag.Bool("w", false, "rewrite input files in place")
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage: goiferr [-w] <args>...")
+		flag.PrintDefaults()
+		fmt.Fprintln(os.Stderr, loader.FromArgsUsage)
+	}
+	flag.Parse()
+
 	conf := loader.Config{
 		AllowErrors: true,
 	}
-	conf.FromArgs(os.Args[1:], true)
-	prog, err := conf.Load()
+	conf.FromArgs(flag.Args(), true)
 
-	for _, pkg := range prog.InitialPackages() {
-		log.Println(pkg)
-		for _, f := range pkg.Files {
-			log.Println(f)
-			iferr.RewriteFile(conf.Fset, f, pkg.Info)
-			printer.Fprint(os.Stdout, conf.Fset, f)
-		}
+	prog, err := conf.Load()
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	for _, pkg := range prog.InitialPackages() {
+		for _, f := range pkg.Files {
+			filename := prog.Fset.File(f.Pos()).Name()
+			fmt.Printf("=== %s\n", filename)
+			iferr.RewriteFile(prog.Fset, f, pkg.Info)
+			if *write {
+				fh, err := os.Create(filename)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				format.Node(fh, prog.Fset, f)
+			} else {
+				printer.Fprint(os.Stdout, prog.Fset, f)
+			}
+		}
+	}
 }
