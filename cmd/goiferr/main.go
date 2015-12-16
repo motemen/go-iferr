@@ -25,6 +25,9 @@ func main() {
 	conf := loader.Config{
 		AllowErrors: true,
 	}
+	conf.TypeChecker.Error = func(err error) {
+		log.Printf("error (ignored): %s", err)
+	}
 	conf.FromArgs(flag.Args(), true)
 
 	prog, err := conf.Load()
@@ -42,7 +45,6 @@ func main() {
 				if err != nil {
 					log.Fatal(err)
 				}
-
 				format.Node(fh, prog.Fset, f)
 			} else {
 				printer.Fprint(os.Stdout, prog.Fset, f)

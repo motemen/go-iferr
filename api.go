@@ -1,7 +1,6 @@
 package iferr
 
 import (
-	"flag"
 	"fmt"
 	"log"
 
@@ -10,7 +9,6 @@ import (
 	"go/token"
 
 	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/go/loader"
 	"golang.org/x/tools/go/types"
 
 	"github.com/motemen/go-astmanip"
@@ -21,33 +19,6 @@ var (
 	logFatalCode = "log.Fatal(err)"
 	tFatalCode   = "t.Fatal(err)"
 )
-
-func doit() error {
-	flag.Parse()
-
-	conf := loader.Config{
-		Fset:       token.NewFileSet(),
-		ParserMode: parser.ParseComments,
-	}
-	if _, err := conf.FromArgs(flag.Args(), true); err != nil {
-		return err
-	}
-
-	prog, err := conf.Load()
-
-	if err != nil {
-		return err
-	}
-
-	pkgs := prog.InitialPackages()
-	for _, pkg := range pkgs {
-		for _, file := range pkg.Files {
-			RewriteFile(prog.Fset, file, pkg.Info)
-		}
-	}
-
-	return nil
-}
 
 var errorType types.Type
 
@@ -108,10 +79,6 @@ func RewriteFile(fset *token.FileSet, f *ast.File, info types.Info) {
 			ifStmt := makeErrorCatchStatement(assign.ident, handle)
 
 			assign.outerFunc.Body.List = astmanip.InsertStmtAfter(assign.outerFunc.Body.List, ifStmt, assign.stmt)
-			// assign.outerFunc.Type.Results.List[0].Type
-			// if func has error in result type, return
-			// else if log imported, log.Fatal
-			// else panic
 		}
 	}
 }
