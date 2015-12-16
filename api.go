@@ -124,7 +124,7 @@ func makeErrorHandleStatement(assign errorAssign, info types.Info) ast.Stmt {
 	return &ast.ExprStmt{X: expr}
 }
 
-var ifTemplate = `package P; func _() { if err != nil {} }`
+var ifTemplate = `package _; func _() { if err != nil {} }`
 
 func makeErrorCatchStatement(errName *ast.Ident, stmt ast.Stmt) *ast.IfStmt {
 	fset := token.NewFileSet()

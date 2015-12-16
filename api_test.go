@@ -53,7 +53,7 @@ func c() {
 		t.Fatal(err)
 	}
 
-	rewriteFile(conf.Fset, f, prog.Package("p").Info)
+	RewriteFile(conf.Fset, f, prog.Package("p").Info)
 	printer.Fprint(os.Stderr, conf.Fset, f)
 
 	_ = err
