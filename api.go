@@ -108,13 +108,28 @@ func makeErrorHandleStatement(assign errorAssign, info types.Info) ast.Stmt {
 		}
 	}
 
-	code := panicCode
+	var code string
 
-	_, obj := info.Scopes[assign.outerFunc.Type].LookupParent("log", 0)
-	if logPkg, ok := obj.(*types.PkgName); ok && logPkg.Imported().Path() == "log" {
-		code = logFatalCode
+	funcScope := info.Scopes[assign.outerFunc.Type]
+	if tVar, ok := funcScope.Lookup("t").(*types.Var); ok {
+		if tVarType, ok := tVar.Type().(*types.Pointer); ok {
+			if tVarType, ok := tVarType.Elem().(*types.Named); ok {
+				tVarTypeObj := tVarType.Obj()
+				if tVarTypeObj.Pkg().Path() == "testing" && tVarTypeObj.Name() == "T" {
+					code = tFatalCode
+				}
+			}
+		}
 	}
-	// TODO: t.Fatal(err)
+	if code == "" {
+		_, logObj := info.Scopes[assign.outerFunc.Type].LookupParent("log", token.NoPos)
+		if logPkg, ok := logObj.(*types.PkgName); ok && logPkg.Imported().Path() == "log" {
+			code = logFatalCode
+		}
+	}
+	if code == "" {
+		code = panicCode
+	}
 
 	expr, err := parser.ParseExpr(code)
 	if err != nil {
