@@ -10,7 +10,7 @@ import (
 	"go/printer"
 	"golang.org/x/tools/go/loader"
 
-	"github.com/motemen/goiferr"
+	"github.com/motemen/go-iferr"
 )
 
 func main() {
@@ -45,6 +45,7 @@ func main() {
 				if err != nil {
 					log.Fatal(err)
 				}
+
 				format.Node(fh, prog.Fset, f)
 			} else {
 				printer.Fprint(os.Stdout, prog.Fset, f)
