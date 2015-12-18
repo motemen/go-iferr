@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"go/format"
+	"go/parser"
 	"go/printer"
 	"golang.org/x/tools/go/loader"
 
@@ -24,6 +25,7 @@ func main() {
 
 	conf := loader.Config{
 		AllowErrors: true,
+		ParserMode:  parser.ParseComments,
 	}
 	conf.TypeChecker.Error = func(err error) {
 		log.Printf("error (ignored): %s", err)

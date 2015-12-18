@@ -1,3 +1,6 @@
+// TODO(motemen): Don't guess the variable name to "err"
+// TODO(motemen): Make error handling code custamizable
+
 package iferr
 
 import (
@@ -46,6 +49,10 @@ func RewriteFile(fset *token.FileSet, f *ast.File, info types.Info) {
 		for _, lhs := range assign.Lhs {
 			if ident, ok := lhs.(*ast.Ident); ok && ident.Name != "_" {
 				t := info.TypeOf(ident)
+				if t == nil {
+					log.Printf("%s: could not detect type of %s", fset.Position(ident.Pos()), ident.Name)
+					continue
+				}
 				if types.Identical(t, errorType) {
 					var funcDecl *ast.FuncDecl
 					path, _ := astutil.PathEnclosingInterval(f, assign.Pos(), assign.End())
