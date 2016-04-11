@@ -8,8 +8,9 @@ import (
 	"go/ast"
 	"go/printer"
 
+	_ "go/types"
+
 	"golang.org/x/tools/go/loader"
-	_ "golang.org/x/tools/go/types"
 )
 
 func TestRewriteFile(t *testing.T) {
