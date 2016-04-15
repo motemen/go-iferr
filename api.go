@@ -10,9 +10,9 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"go/types"
 
 	"golang.org/x/tools/go/ast/astutil"
-	"golang.org/x/tools/go/types"
 
 	"github.com/motemen/go-astmanip"
 )
